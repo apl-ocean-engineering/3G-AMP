@@ -209,9 +209,13 @@ class AMP3GImageProc():
             self.homog = np.identity(3)
           
         else:
-            file = open(homography_transform, "r") 
-            self.homog = np.array(file.read().split(',')[0:9], 
-                                 dtype=np.float32).reshape((3,3))  
+            try:
+                file = open(homography_transform, "r") 
+                self.homog = np.array(file.read().split(',')[0:9], 
+                                     dtype=np.float32).reshape((3,3))  
+            except:
+                print("Homography file not found")
+                sys.exit(0)
 
         self.time_delay_allowed = time_delay_allowed
         self.save_directory = save_directory
@@ -243,15 +247,14 @@ class AMP3GImageProc():
         Returns:
             -overlap_intensity(list<float>): List of image overlaps from the 
                 defined location
-        """    
+        """ 
         date = path.split('/')[-2]
 
         overlap_intensity = self._overlap(path + "Manta 1/*.jpg", 
                 path + "Manta 2/*.jpg", overlap = True, 
                 display_images = display_images, 
                 display_overlap= display_overlap,
-                ignore_triggers = False, 
-                only_triggers = False, color = True, date = date)    
+                color = True, date = None)    
         #print(overlap_intensity)
         return overlap_intensity
         
@@ -274,7 +277,7 @@ class AMP3GImageProc():
         
         for fname1, fname2 in images:
             
-            signal.signal(signal.SIGINT, sigint_handler)
+            #signal.signal(signal.SIGINT, sigint_handler)
             img1 = cv2.imread(fname1)
             cv2.imshow('frame1',img1)
             k = cv2.waitKey(time_delay)
@@ -285,7 +288,7 @@ class AMP3GImageProc():
     def _overlap(self, d1, d2, overlap = False, 
                                 display_images = False, color = False, 
                                 display_overlap=False, 
-                                date = None):
+                                date = None, save = True):
         """
         Run background subtraction algorithm using openCv 
         createBackgroundSubtractorMOG2. Will do background subtraction for all
@@ -306,6 +309,7 @@ class AMP3GImageProc():
             [color(bool)]: Display color or grayscale images
             [display_overlap(bool)]: Display overlapped image
             [date(str)]: Current date (YYYY_MM_DD HH_MM_SS) for saving
+            [save(bool)]:To save or not to save
             
         Return:
             overlap_intensity(list<float>): List of all image intensities
@@ -313,6 +317,8 @@ class AMP3GImageProc():
         #get list of all images from current directory
         images1 = sorted(get_paths(d1), reverse = True)
         images2 = sorted(get_paths(d2), reverse = True) 
+        
+        
         
         #create a background subtraction object
         fgbg1 = cv2.createBackgroundSubtractorMOG2(detectShadows=True)
@@ -339,13 +345,15 @@ class AMP3GImageProc():
         overlap_count = 0
         i = 0
         for fname1, fname2 in images:
+            
             """
             Loop through all image frames and run background subtraction.
             If overlap is selected, compare the overlap between the two 
             images
             """
-            signal.signal(signal.SIGINT, sigint_handler)
-
+            #signal.signal(signal.SIGINT, sigint_handler)
+            
+            date = fname1.split('/')[-1][:-4] #save timestamp without .jpg
 
             check_date = self._check_date(fname1, fname2)
             if check_date:
@@ -372,13 +380,12 @@ class AMP3GImageProc():
                     overlap_img = np.bitwise_and(
                             blur1_trans_dilate, blur2_dilate)
                     overlap_sum = np.sum(overlap_img)
-
+                    #print(overlap_sum)
                     if overlap_sum > 1000: #IT ALWAYS FAILS ON THE FIRST TRY
                         overlap_count += 1
                     else:
                         overlap_count = 0
-                    if overlap_count >= 3:
-
+                    if overlap_count >= 3 and save:
                         with open(self.save_directory + '/3GhighStereo.txt', 'a+') as f:
                            f.write(date +'\n')                           
                         break
