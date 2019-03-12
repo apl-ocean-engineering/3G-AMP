@@ -21,7 +21,7 @@ def runamp3G(base_path):
     amp3G = AMP3GImageProc(save_directory = data_directory, 
                 homography_transform = homography_transform)
                 
-    amp3G.image_overlap(base_path)
+    amp3G.image_overlap(base_path, save = False)
                
 
 

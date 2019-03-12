@@ -219,6 +219,7 @@ class AMP3GImageProc():
 
         self.time_delay_allowed = time_delay_allowed
         self.save_directory = save_directory
+        self.overlap_sum_threshold = 1000000 #Threshold for overlap
     
     def display_images(self, path):
         """
@@ -236,7 +237,7 @@ class AMP3GImageProc():
         self._display_images(path + "/Manta 1/*.jpg", 
                     path + "/Manta 2/*.jpg")  
         
-    def image_overlap(self, path, display_images = False, display_overlap = False):
+    def image_overlap(self, path, display_images = False, display_overlap = False, save = True):
         """
         Check the overlap of images, check image intensity
         Inputs:
@@ -248,13 +249,12 @@ class AMP3GImageProc():
             -overlap_intensity(list<float>): List of image overlaps from the 
                 defined location
         """ 
-        date = path.split('/')[-2]
-
+        
         overlap_intensity = self._overlap(path + "Manta 1/*.jpg", 
                 path + "Manta 2/*.jpg", overlap = True, 
                 display_images = display_images, 
                 display_overlap= display_overlap,
-                color = True, date = None)    
+                color = True, date = None, save = save)    
         #print(overlap_intensity)
         return overlap_intensity
         
@@ -341,7 +341,7 @@ class AMP3GImageProc():
         overlap_intensity = []
         
         #Kernel for median blur
-        kernel = np.ones((50,50),np.uint8)
+        kernel = np.ones((15,15),np.uint8)
         overlap_count = 0
         i = 0
         for fname1, fname2 in images:
@@ -354,8 +354,9 @@ class AMP3GImageProc():
             #signal.signal(signal.SIGINT, sigint_handler)
             
             date = fname1.split('/')[-1][:-4] #save timestamp without .jpg
-
+            
             check_date = self._check_date(fname1, fname2)
+            #print(check_date)
             if check_date:
                 #Read images and inport
                 img1 = cv2.imread(fname1)
@@ -380,12 +381,12 @@ class AMP3GImageProc():
                     overlap_img = np.bitwise_and(
                             blur1_trans_dilate, blur2_dilate)
                     overlap_sum = np.sum(overlap_img)
-                    #print(overlap_sum)
-                    if overlap_sum > 1000: #IT ALWAYS FAILS ON THE FIRST TRY
+                    print(overlap_sum)
+                    if overlap_sum > self.overlap_sum_threshold: #IT ALWAYS FAILS ON THE FIRST TRY
                         overlap_count += 1
                     else:
                         overlap_count = 0
-                    if overlap_count >= 3 and save:
+                    if overlap_count >= 4 and save:
                         with open(self.save_directory + '/3GhighStereo.txt', 'a+') as f:
                            f.write(date +'\n')                           
                         break
