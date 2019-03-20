@@ -15,12 +15,13 @@ import os
 
 ######################## CHANGE FOLDER VARIABLES ##############################
 base_folder = "/media/3GAMP"
-start_date = ' ' #'/media/3GAMP/2019_03_01/2019_03_01'#Set null string (' ') to search over full space
+start_date = ' '#'/media/3GAMP/2019_03_03/2019_03_08'#Set null string (' ') to search over full space
 time_delay = 1 #ms
 
 main_directory = '/'.join(os.path.dirname(os.path.realpath(__file__)).split('/')[:-1])
 data_directory = main_directory + '/data'
 homography_transform = data_directory + '/3Ghomography_transform.txt'
+
 
 
 def beyond_date(date, start_date):
@@ -86,8 +87,10 @@ def main(base_folder, start_date):
 if __name__ == '__main__':
     base_folder = base_folder
     #main(base_folder, start_date)
-    view_data('/media/3GAMP/2019_01_17/2019_01_17 10_03_49/')
-    #view_data('/media/3GAMP/2019_01_17/2019_01_17 10_05_45/')
+    #view_data('/media/3GAMP/2019_03_04/2019_03_04 10_31_18/')
+    #view_data('/media/3GAMP/2019_03_07/2019_03_07 12_52_42/')
+    view_data('/media/3GAMP/2019_01_21/2019_01_21 01_10_55/')
+    #view_data("/home/mitchell/3G-AMP-Calibration/2018_12_12 14_16_56/")
     #view_data_lst(data_directory + "/view_data.txt")
         
     
