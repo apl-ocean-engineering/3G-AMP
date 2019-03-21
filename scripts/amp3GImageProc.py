@@ -40,7 +40,6 @@ def get_paths(directory, flag = False):
         satisfies the in input style.
         Empty list if no such file/folder exists
     """
-    
     paths = sorted(glob.glob(directory))
     return paths
 
@@ -353,14 +352,9 @@ class AMP3GImageProc():
             If overlap is selected, compare the overlap between the two 
             images
             """
-            #signal.signal(signal.SIGINT, sigint_handler)
-            
-            
-            
-            date = fname1.split('/')[-1][:-4] #save timestamp without .jpg
+            signal.signal(signal.SIGINT, sigint_handler)
             
             check_date = self._check_date(fname1, fname2)
-            
             if not check_date:
                 fname1, fname2 = self._find_date(images, i)
                 if fname1 == None: #No images within allowable time
@@ -372,12 +366,7 @@ class AMP3GImageProc():
             if check_date:
                 #Read images and inport
                 img1 = cv2.imread(fname1)
-                img2 = cv2.imread(fname2)
-    
-                
-                gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
-                gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
-                
+                img2 = cv2.imread(fname2)               
 
                 #Apply the mask
                 img1b = fgbg1.apply(img1)#, learningRate=0.035)
@@ -396,10 +385,6 @@ class AMP3GImageProc():
 
                     blur1_trans = cv2.warpPerspective(blur2, self.homog, 
                                    (blur1.shape[1],blur1.shape[0]))
-                    
-                    k = cv2.waitKey(100)
-                    if k != -1:
-                        cv2.waitKey(2000)
 
                     blur1_trans_dilate = cv2.dilate(
                             blur1_trans,kernel,iterations = 1)
@@ -415,14 +400,16 @@ class AMP3GImageProc():
                     else:
                         overlap_count = 0
                     if overlap_count >= 4 and save:
-                        with open(self.save_directory + '/highStereoData.txt', 'a+') as f:
-                           f.write(date +'\n')                           
+                        print("HIGH OVERLAP DETECTED FOR DATE:", d1.split('/')[-3])
+                        with open(self.save_directory + '\highStereoData.txt', 'a+') as f:
+                           f.write(d1.split('/')[-3] +'\n')                           
                         break
                     
 
                     overlap_intensity.append(overlap_sum)
                     if display_overlap:
                         cv2.imshow('overlap', overlap_img)
+                
                 if display_images:
                     if color:
                                                
@@ -434,9 +421,9 @@ class AMP3GImageProc():
 
                 if display_images or display_overlap:
                     if i == 0:
-                        k = cv2.waitKey(1)
+                        k = cv2.waitKey(100)
                     else:
-                        k = cv2.waitKey(1)
+                        k = cv2.waitKey(100)
                       
                     if k == 99:
                         cv2.destroyAllWindows()
@@ -685,7 +672,6 @@ class imageTransforms(object):
                     else:
                         check_date = True
                 if check_date:
-                    print(f1, f2)
                     img1, img2 = cv2.imread(f1), cv2.imread(f2)
                     
                     orb = cv2.ORB_create()
@@ -786,7 +772,7 @@ class imageTransforms(object):
                 #cv2.imshow("dst", dst1)
                 cv2.imshow("img", img1)
                 #cv2.imshow("dst2", dst2)
-                print(f1, f2)
+                #print(f1, f2)
                 cv2.imshow("overlay", overlay1)  
                 #cv2.imshow("overlay1", overlay2) 
                 #cv2.imshow("overlay2", overlay3) 
@@ -802,255 +788,7 @@ class imageTransforms(object):
             
             return homography_transform 
             """
-
-
-    def find_homography_check(self, save = False, path =""):
-        """
-        Calculate homography transformation matrix from corresponding points
-        
-        Should use at least four points to be accruate
-        
-        Args:
-            [save(bool)]: If the data should be saved or not
-            [path(str)]: Path to save, is desired
-        
-        Return: 
-            homography_transform (np.mat<float>): (2X3) homography matrix
-        
-        #Get corresponding points
-        pnts1, pnts2 = self._image_points()
-        #Get transform
-        homography_transform = cv2.findHomography(pnts1, pnts2)
-        
-        if save:
-            #Save data to text file
-            np.savetxt(path+"3Ghomography_transform.txt", 
-                       np.array(homography_transform[0]).reshape(1,9), 
-                       delimiter=',', fmt="%f")         
-        
-        return homography_transform   
-        
-        cv2.namedWindow('image1', cv2.WINDOW_NORMAL)
-        cv2.resizeWindow('image1', 800,800)
-        cv2.namedWindow('image2', cv2.WINDOW_NORMAL)
-        cv2.resizeWindow('image2', 800,800)
-        cv2.namedWindow('image3', cv2.WINDOW_NORMAL)
-        cv2.resizeWindow('image3', 800,800)
-        """
-        
-        objp = np.zeros((6*8,3), np.float32)
-        objp[:,:2] = np.mgrid[0:8,0:6].T.reshape(-1,2)
-        #Termination criteria
-        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 
-                    30, 0.001)
-        images = zip(self.m1_subdirectories, self.m2_subdirectories)
-        pnts1 = [] # 2d points in image plane.
-        pnts2 = []
-        objpoints = []
-        ret_seen = 0 
-        """
-        for i in range(0, len(self.m1_subdirectories)):
-            #print(i)
-            try:
-                signal.signal(signal.SIGINT, sigint_handler)
-                #Get img1 and img2 from the subdirectories
-                f1, f2 = self.m1_subdirectories[i], self.m2_subdirectories[i]
-                print(1,f1,f2)
-                check_date = self._check_date(f1, f2)
-                if ret_seen > 50:
-                    break
-                if not check_date:
-                    f1, f2 = self._find_date(images, i)
-                    if f1 == None: #No images within allowable time
-                        check_date = False
-                    else:
-                        check_date = True
-                if check_date:
-                    img1, img2 = cv2.imread(f1), cv2.imread(f2)
-                    
-                    gray1 = cv2.cvtColor(img1,cv2.COLOR_BGR2GRAY)
-                    gray2 = cv2.cvtColor(img2,cv2.COLOR_BGR2GRAY)
-                    # Find the chess board corners
-                    ret1, corners_cam1 = cv2.findChessboardCorners(
-                            gray1, (8,6), None)
-                    ret2, corners_cam2 = cv2.findChessboardCorners(
-                            gray2, (8,6), None)
-                    #If checkerboards are seen in both frames (propably uneccessary...)
-                    #TODO: Remove this condition for more points or nah?
-                    if ret1 and ret2:
-                        ret_seen += 1
-                        objpoints.append(objp)
-                        #Find corners
-                        corners_cam1_2 = cv2.cornerSubPix(
-                                gray1,corners_cam1,(11,11),(-1,-1),criteria)       
-                        corners_cam2_2 = cv2.cornerSubPix(
-                                gray1,corners_cam2,(11,11),(-1,-1),criteria) 
-                        #Append points
-                        #pnts1.append(corners_cam1_2)
-                        #pnts1.append(corners_cam2_2)
-                        
-                        self.x1_points.append(corners_cam1_2[0][0][0])
-                        #print(self.x1_points.append(corners_cam1_2[0]))
-                        self.y1_points.append(corners_cam1_2[0][0][1])
-                        self.x2_points.append(corners_cam2_2[0][0][0])
-                        self.y2_points.append(corners_cam2_2[0][0][1])
-                        
-                        
-                    
-            except: 
-                pass
-        """
-        #print(self.m1_subdirectories2)
-        images = zip(self.m1_subdirectories2, self.m2_subdirectories2)
-        for i in range(0, min(len(self.m1_subdirectories2), 100)):
-            #print(i)
-            if 1:#i % 2 == 0:
-                try:
-                    signal.signal(signal.SIGINT, sigint_handler)
-                    #Get img1 and img2 from the subdirectories
-                    f1, f2 = self.m1_subdirectories2[i], self.m2_subdirectories2[i]
-                    
-                    
-                    
-                    check_date = self._check_date(f1, f2)
-                
-                    if not check_date:
-                        f1, f2 = self._find_date(images, i)
-                        if f1 == None: #No images within allowable time
-                            check_date = False
-                        else:
-                            check_date = True                
-                    
-                    if check_date:
-                        #print(2, f1, f2)
-                        img1, img2 = cv2.imread(f1), cv2.imread(f2)
-                        #cv2.imshow('image1', img1)
-                        #cv2.imshow('image2', img2)
-                        #cv2.wiatKey(100)
-                        orb = cv2.ORB_create()
-                        kp1, des1 = orb.detectAndCompute(cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY),None)
-                        kp2, des2 = orb.detectAndCompute(cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY),None)
-                        bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-                        
-                        matches = bf.match(des1,des2)
-                        print(len(matches))
-                        cv2.imshow('image1', img1)
-                        cv2.imshow('image2', img2)
-                        cv2.waitKey(100)
-                        
-                        for mat in matches:
-                            #print(mat.queryIdx)
-                            #print(mat.trainIdx)
-                            #pnts1.append(kp1[mat.queryIdx].pt)
-                            #pnts2.append(kp2[mat.trainIdx].pt)
-                            self.x1_points.append(kp1[mat.queryIdx].pt[0])
-                            self.y1_points.append(kp1[mat.queryIdx].pt[1])
-                            self.x2_points.append(kp2[mat.trainIdx].pt[0])
-                            self.y2_points.append(kp2[mat.trainIdx].pt[1])
-                            #print(pnts1)
-                            
-                            #matches = sorted(matches, key = lambda x:x.distance)
-                            #Show images
-                            #cv2.imshow('image1', img1)
-                            #cv2.imshow('image2', img2)
-                            #cv2.waitKey(100)
-                            img3 = cv2.drawMatches(img1,kp1,img2,kp2,matches[:10],img1, flags=2)
-                            cv2.imshow('image3', img3)
-                            #print(matches)
-                            
-                            k = cv2.waitKey(1)
-                            if k == 99:
-                                cv2.destroyAllWindows()
-                                sys.exit()  
-                            if k == 102:
-                                cv2.destroyAllWindows()
-                                break 
-                            
-                            
-                            
-                            
-                        
-                except: 
-                    pass 
-        """
-        pnts1, pnts2 = self.get_points()
-        print(len(pnts1))
-        print(len(pnts2))
-        fundmental = cv2.findFundamentalMat(pnts1, pnts2)
-        
-        print(fundmental)
-        
-        ret, H1, H2 = cv2.stereoRectifyUncalibrated(pnts1, pnts2, fundmental[0], (img2.shape[1],img2.shape[0]))
-        cv2.namedWindow('img', cv2.WINDOW_NORMAL)
-        cv2.resizeWindow('img', 800,800)
-        cv2.namedWindow('overlay', cv2.WINDOW_NORMAL)
-        cv2.resizeWindow('overlay', 800,800)
-        
-        cv2.namedWindow('overlay1', cv2.WINDOW_NORMAL)
-        cv2.resizeWindow('overlay1', 800,800)
-        cv2.namedWindow('overlay2', cv2.WINDOW_NORMAL)
-        cv2.resizeWindow('overlay2', 800,800)   
-        
-        images = zip(self.m1_subdirectories, self.m2_subdirectories)
-        for i in range(0, len(self.m1_subdirectories)):
-            f1, f2 = self.m1_subdirectories[i], self.m2_subdirectories[i]
-            
-            check_date = self._check_date(f1, f2)
-            
-            if not check_date:
-                f1, f2 = self._find_date(images, i)
-                if f1 == None: #No images within allowable time
-                    check_date = False
-                else:
-                    check_date = True
-            if check_date:
-            
-                img1 = cv2.imread(f1)
-                img2 = cv2.imread(f2)        
-                dst1 = cv2.warpPerspective(img1, H1, (img1.shape[1],img1.shape[0]))
-                dst2 = cv2.warpPerspective(img2, H2, (img2.shape[1],img2.shape[0]))
-                
-                overlay1 = cv2.addWeighted(dst1, 1.0, dst2, 1.0, 0.0)
-                overlay2 = cv2.addWeighted(dst1, 1.0, img2, 1.0, 0.0)
-                overlay3 = cv2.addWeighted(dst2, 1.0, img1, 1.0, 0.0)
-                
-                
-                               
-                homography_transform = cv2.findHomography(pnts1, pnts2)
-                
-                affine_transformation = cv2.getAffineTransform(pnts1, pnts2)
-                
-                print(affine_transformation)
-                
-                dst = cv2.warpAffine(img1, affine_transformation, (img2.shape[1],img2.shape[0]))
-                
-                
-                dst = cv2.warpPerspective(img1, homography_transform[0], (img2.shape[1],img2.shape[0]))
-                
-                dst2 = cv2.addWeighted(img2, 1.0, dst, 1.0, 0.0)
-                
-                
-                #cv2.imshow("dst", dst1)
-                cv2.imshow("img", img1)
-                #cv2.imshow("dst2", dst2)
-                print(f1, f2)
-                cv2.imshow("overlay", overlay1)  
-                #cv2.imshow("overlay1", overlay2) 
-                #cv2.imshow("overlay2", overlay3) 
-                
-                cv2.waitKey(100)
-                
-                print(homography_transform)
-                if save:
-                    #Save data to text file
-                    np.savetxt(path+"3Ghomography_transform.txt", 
-                               np.array(homography_transform[0]).reshape(1,9), 
-                               delimiter=',', fmt="%f")         
-            
-            return homography_transform 
-            """            
-        
-        
+    
     def stereo_rectify(self,path ="",save = False):
         intrinsics1 = path + "camera1/intrinsic_matrix.csv"
         file = open(intrinsics1, "r") 
