@@ -346,6 +346,13 @@ class AMP3GImageProc():
         kernel = np.ones((250,250),np.uint8)
         overlap_count = 0
         i = 0
+        """
+        Log file
+        """
+        with open(self.save_directory + '\log.txt', 'a+') as f:
+                now = datetime.datetime.now()
+                f.write("%s, %s\n" % (d1.split('/')[-3], now.strftime("%Y_%m_%d %H::%M::%S")))    
+                
         for fname1, fname2 in images:
             
             """
@@ -353,31 +360,20 @@ class AMP3GImageProc():
             If overlap is selected, compare the overlap between the two 
             images
             """
-            #signal.signal(signal.SIGINT, sigint_handler)
+            signal.signal(signal.SIGINT, sigint_handler)              
             
-            
-            
-            date = fname1.split('/')[-1][:-4] #save timestamp without .jpg
             
             check_date = self._check_date(fname1, fname2)
-            
             if not check_date:
                 fname1, fname2 = self._find_date(images, i)
                 if fname1 == None: #No images within allowable time
                     check_date = False
                 else:
                     check_date = True
-            #check_date = True
-            #print(check_date)
             if check_date:
                 #Read images and inport
                 img1 = cv2.imread(fname1)
-                img2 = cv2.imread(fname2)
-    
-                
-                gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
-                gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
-                
+                img2 = cv2.imread(fname2)               
 
                 #Apply the mask
                 img1b = fgbg1.apply(img1)#, learningRate=0.035)
@@ -396,10 +392,6 @@ class AMP3GImageProc():
 
                     blur1_trans = cv2.warpPerspective(blur2, self.homog, 
                                    (blur1.shape[1],blur1.shape[0]))
-                    
-                    k = cv2.waitKey(100)
-                    if k != -1:
-                        cv2.waitKey(2000)
 
                     blur1_trans_dilate = cv2.dilate(
                             blur1_trans,kernel,iterations = 1)
@@ -414,15 +406,17 @@ class AMP3GImageProc():
                         overlap_count += 1
                     else:
                         overlap_count = 0
-                    if overlap_count >= 4 and save:
-                        with open(self.save_directory + '/highStereoData.txt', 'a+') as f:
-                           f.write(date +'\n')                           
+                    if 1:#overlap_count >= 4 and save:
+                        print("HIGH OVERLAP DETECTED FOR DATE:", d1.split('/')[-3])
+                        with open(self.save_directory + '\highStereoData_Q.txt', 'a+') as f:  
+                            f.write("%s, %s, %s, %s\n" % (d1.split('/')[-3], '/'.join(fname1.split('/')[-2:]), '/'.join(fname2.split('/')[-2:]), now.strftime("%Y_%m_%d %H::%M::%S")))  
                         break
                     
 
                     overlap_intensity.append(overlap_sum)
                     if display_overlap:
                         cv2.imshow('overlap', overlap_img)
+                
                 if display_images:
                     if color:
                                                
@@ -434,9 +428,9 @@ class AMP3GImageProc():
 
                 if display_images or display_overlap:
                     if i == 0:
-                        k = cv2.waitKey(1)
+                        k = cv2.waitKey(100)
                     else:
-                        k = cv2.waitKey(1)
+                        k = cv2.waitKey(100)
                       
                     if k == 99:
                         cv2.destroyAllWindows()
