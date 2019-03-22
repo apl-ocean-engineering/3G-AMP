@@ -353,6 +353,9 @@ class AMP3GImageProc():
             images
             """
             signal.signal(signal.SIGINT, sigint_handler)
+            with open(self.save_directory + '\log.txt', 'a+') as f:
+                f.write([d1.split('/')[-3] +'\n', time.time()])                     
+            
             
             check_date = self._check_date(fname1, fname2)
             if not check_date:
