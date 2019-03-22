@@ -21,7 +21,7 @@ def runamp3G(base_path):
     amp3G = AMP3GImageProc(save_directory = data_directory, 
                 homography_transform = homography_transform)
                 
-    amp3G.image_overlap(base_path, save = False)
+    amp3G.image_overlap(base_path, save = True)
                
 
 
@@ -31,7 +31,7 @@ def main(base_path, sleep):
         if event:
             if event[1][0] == "IN_ATTRIB":
                 #Add a small delay incase both images have not been added
-                time.sleep(0.5)
+                time.sleep(2.0)
                 
                 t = threading.Thread(name='runamp3G', target=runamp3G, args=(base_path,))
                 t.start()    
