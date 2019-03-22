@@ -345,6 +345,13 @@ class AMP3GImageProc():
         kernel = np.ones((250,250),np.uint8)
         overlap_count = 0
         i = 0
+        """
+        Log file
+        """
+        with open(self.save_directory + '\records\log.txt', 'a+') as f:
+                now = datetime.datetime.now()
+                f.write("%s, %s\n" % (d1.split('/')[-3], now.strftime("%Y_%m_%d %H::%M::%S")))    
+                
         for fname1, fname2 in images:
             
             """
@@ -352,9 +359,7 @@ class AMP3GImageProc():
             If overlap is selected, compare the overlap between the two 
             images
             """
-            signal.signal(signal.SIGINT, sigint_handler)
-            with open(self.save_directory + '\log.txt', 'a+') as f:
-                f.write([d1.split('/')[-3] +'\n', time.time()])                     
+            signal.signal(signal.SIGINT, sigint_handler)              
             
             
             check_date = self._check_date(fname1, fname2)
@@ -364,8 +369,6 @@ class AMP3GImageProc():
                     check_date = False
                 else:
                     check_date = True
-            #check_date = True
-            #print(check_date)
             if check_date:
                 #Read images and inport
                 img1 = cv2.imread(fname1)
@@ -402,10 +405,10 @@ class AMP3GImageProc():
                         overlap_count += 1
                     else:
                         overlap_count = 0
-                    if overlap_count >= 4 and save:
+                    if 1:#overlap_count >= 4 and save:
                         print("HIGH OVERLAP DETECTED FOR DATE:", d1.split('/')[-3])
-                        with open(self.save_directory + '\highStereoData.txt', 'a+') as f:
-                           f.write(d1.split('/')[-3] +'\n')                           
+                        with open(self.save_directory + '\records\highStereoData_Q.txt', 'a+') as f:  
+                            f.write("%s, %s, %s, %s\n" % (d1.split('/')[-3], '/'.join(fname1.split('/')[-2:]), '/'.join(fname2.split('/')[-2:]), now.strftime("%Y_%m_%d %H::%M::%S")))  
                         break
                     
 
