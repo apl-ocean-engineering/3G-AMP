@@ -348,7 +348,7 @@ class AMP3GImageProc():
         """
         Log file
         """
-        with open(self.save_directory + '\records\log.txt', 'a+') as f:
+        with open(self.save_directory + '\\records\log.txt', 'a+') as f:
                 now = datetime.datetime.now()
                 f.write("%s, %s\n" % (d1.split('/')[-3], now.strftime("%Y_%m_%d %H::%M::%S")))    
                 
@@ -407,7 +407,7 @@ class AMP3GImageProc():
                         overlap_count = 0
                     if overlap_count >= 4 and save:
                         print("HIGH OVERLAP DETECTED FOR DATE:", d1.split('/')[-3])
-                        with open(self.save_directory + '\records\highStereoData_Q.txt', 'a+') as f:  
+                        with open(self.save_directory + '\\records\highStereoData.txt', 'a+') as f:  
                             f.write("%s, %s, %s, %s\n" % (d1.split('/')[-3], '/'.join(fname1.split('/')[-2:]), '/'.join(fname2.split('/')[-2:]), now.strftime("%Y_%m_%d %H::%M::%S")))  
                         break
                     

@@ -16,6 +16,8 @@ import glob
 main_directory = "/Users/AMP/Desktop/Data/"
 base_folder_directory = os.path.abspath('..')
 data_directory = base_folder_directory + '\data'
+#Manually set to drop box location...
+save_directory = "C:\Users\AMP\Dropbox (MREL)\\amp"
 sleep_time = 10
 
 ##String manipuation for windows...
@@ -24,7 +26,7 @@ homography_transform.replace('\\', '/')[2:]
 
 def runamp3G(base_path):
     #Create amp3G object and run
-    amp3G = AMP3GImageProc(save_directory = data_directory, 
+    amp3G = AMP3GImageProc(save_directory = save_directory, 
                 homography_transform = homography_transform)
     amp3G.image_overlap(base_path, display_images = False, save = True)
                
