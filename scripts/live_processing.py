@@ -37,6 +37,7 @@ def main(sleep):
     date_directory = main_directory + current_date + "/*"
     sub_folders = sorted(glob.glob(date_directory), reverse = True)
     while(1):
+        now = datetime.datetime.now()
         if (current_date != now.strftime("%Y_%m_%d")):
             now = datetime.datetime.now()
             current_date = now.strftime("%Y_%m_%d")
